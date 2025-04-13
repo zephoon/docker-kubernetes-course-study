@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx-app-07 # nginx
+  tls:
+  - hosts:
+    - flask-app.pri01.dnszone.com
+    secretName: tls-secret-csi-app-07
+  rules:
+  - host: flask-app.pri01.dnszone.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-svc
+            port:
+              number: 80
