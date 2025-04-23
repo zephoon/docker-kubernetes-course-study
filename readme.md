@@ -45,7 +45,7 @@ More details: https://azure.github.io/secrets-store-csi-driver-provider-azure/do
 ## 1. Create an AKS cluster with Secret Store CSI and Workload Identity enabled
 
 ```shell
-AKS_RG="rg-aks-apim-2302"
+AKS_RG="rg-aks-apim-0420"
 AKS_NAME="aks-cluster-01"
 
 az group create -n $AKS_RG -l eastasia
@@ -76,7 +76,7 @@ kubectl get nodes
 Get issuer URL
 
 ```shell
-AKS_OIDC_ISSUER=$(az aks show -n $AKS_NAME -g $AKS_RG --query "oidcIssuerProfile.issuerUrl")
+AKS_OIDC_ISSUER=$(az aks show -n $AKS_NAME -g $AKS_RG --query "oidcIssuerProfile.issuerUrl" -o tsv)
 echo $AKS_OIDC_ISSUER
 # https://westeurope.oic.prod-aks.azure.com/16b3c013-d300-468d-ac64-7eda0820b6d3/842120d9-99dd-44dc-be68-91f78bdd41ed/
 ```
@@ -103,15 +103,15 @@ Later on, we'll set a domain name for the load balancer public IP.
 We'll use this URL: aks-app-07.westeurope.cloudapp.azure.com
 
 ```shell
-DNS_NAME="flask-app"
+DNS_NAME="webapi-dns"
 
 CERT_NAME="aks-ingress-cert"
 
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 -out ./aks-ingress-tls.crt \
 -keyout ./aks-ingress-tls.key \
--subj "/CN=$DNS_NAME.pri01.dnszone.com/O=aks-ingress-tls" \
--addext "subjectAltName = DNS:$DNS_NAME.pri01.dnszone.com"
+-subj "/CN=$DNS_NAME.internal.webapi/O=aks-ingress-tls" \
+-addext "subjectAltName = DNS:$DNS_NAME.internal.webapi"
 
 openssl pkcs12 -export -in ./aks-ingress-tls.crt -inkey ./aks-ingress-tls.key -out "$CERT_NAME.pfx"
 # skip Password prompt
@@ -119,18 +119,71 @@ openssl pkcs12 -export -in ./aks-ingress-tls.crt -inkey ./aks-ingress-tls.key -o
 # Verifying - Enter Export Password:
 ```
 
+or https://learn.microsoft.com/en-us/azure/application-gateway/self-signed-certificates
+
+# CA
+openssl ecparam -out root.key -name prime256v1 -genkey
+openssl req -new -sha256 -key root.key -out root.csr
+openssl x509 -req -sha256 -days 365 -in root.csr -signkey root.key -out root.crt
+openssl pkcs12 -export -in ./root.crt -inkey ./root.key -out root.pfx
+# server cert
+openssl ecparam -out aks-ingress-tls.key -name prime256v1 -genkey
+openssl req -new -sha256 -key aks-ingress-tls.key -out aks-ingress-tls.csr
+openssl x509 -req -in aks-ingress-tls.csr -CA root.crt -CAkey root.key -CAcreateserial -out aks-ingress-tls.crt -days 365 -sha256
+# pfx
+openssl pkcs12 -export -in ./aks-ingress-tls.crt -inkey ./aks-ingress-tls.key -out aks-ingress-cert.pfx
+```
+root.crt
+root.key
+aks-ingress-tls.crt
+aks-ingress-tls.key
+aks-ingress-cert.pfx
+```
+
+# disable certificate chain validation if using self-signed certificates
+# https://learn.microsoft.com/en-us/azure/api-management/api-management-howto-mutual-certificates
+```
+$context = New-AzApiManagementContext -resourcegroup 'rg-aks-apim-2302' -servicename 'apim-external-aks-2302'
+
+New-AzApiManagementBackend -Context $context -Url 'https://flask-app.pri01.dnszone.com/api/v1/hello' -Protocol http -SkipCertificateChainValidation $true -SkipCertificateNameValidation $true
+
+Set-AzApiManagementBackend -Context $context -BackendId 03f8b7f0c7274e8395b55832d3895e9d -Description "updated description" -Url 'https://flask-app.pri01.dnszone.com' -SkipCertificateChainValidation $true -SkipCertificateNameValidation $true
+
+```
+
+```
+
+az apim api list --resource-group rg-aks-apim-2302 --service-name apim-external-aks-2302
+
+az rest --method get --uri https://management.azure.com/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourceGroups/rg-aks-apim-2302/providers/Microsoft.ApiManagement/service/apim-external-aks-2302/backends?api-version=2024-05-01 --headers "Authorization: Bearer $azureAccessToken" "Content-Type: application/json"
+
+az rest --method patch --url https://management.azure.com/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourceGroups/rg-aks-apim-2302/providers/Microsoft.ApiManagement/service/apim-external-aks-2302/backends/api-albums?api-version=2024-05-01 --body "{'properties': {'description': 'description5308','tls': {'validateCertificateChain': false,'validateCertificateName': true}}}"
+
+PATCH https://management.azure.com/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourceGroups/rg-aks-apim-2302/providers/Microsoft.ApiManagement/service/apim-external-aks-2302/backends/api-albums?api-version=2024-05-01
+
+Request Body:
+{
+  "properties": {
+    "description": "description5308",
+    "tls": {
+      "validateCertificateChain": false,
+      "validateCertificateName": true
+    }
+  }
+}
+```
 ## 3. Create a Keyvault instance
 
 ```shell
-AKV_NAME="kv4aks2302"
+AKV_NAME="kv4aks0420"
 
 # az keyvault create -n $AKV_NAME -g $AKS_RG --enable-rbac-authorization
 
-AKV_ID=$(az keyvault show -n $AKV_NAME -g $AKS_RG --query id)
+AKV_ID=$(az keyvault show -n $AKV_NAME -g $AKS_RG --query id -o tsv)
 echo $AKV_ID
 # /subscriptions/82f6d75e-85f4-xxxx-xxxx-5dddd9fa8910/resourceGroups/rg-aks-dev/providers/Microsoft.KeyVault/vaults/akvaksapp0137
 
-CURRENT_USER_ID=$(az ad signed-in-user show --query id)
+CURRENT_USER_ID=$(az ad signed-in-user show --query id -o tsv)
 echo $CURRENT_USER_ID
 ```
 
@@ -157,11 +210,11 @@ IDENTITY_NAME="keyvault-identity"
 
 az identity create -g $AKS_RG -n $IDENTITY_NAME
 
-IDENTITY_ID=$(az identity show -g $AKS_RG -n $IDENTITY_NAME --query "id")
+IDENTITY_ID=$(az identity show -g $AKS_RG -n $IDENTITY_NAME --query "id" -o tsv)
 echo $IDENTITY_ID
 # /subscriptions/82f6d75e-85f4-434a-ab74-5dddd9fa8910/resourcegroups/rg-aks-we/providers/Microsoft.ManagedIdentity/userAssignedIdentities/keyvault-identity
 
-IDENTITY_CLIENT_ID=$(az identity show -g $AKS_RG -n $IDENTITY_NAME --query "clientId")
+IDENTITY_CLIENT_ID=$(az identity show -g $AKS_RG -n $IDENTITY_NAME --query "clientId" -o tsv)
 echo $IDENTITY_CLIENT_ID
 # 75d8e078-d9a7-4a4c-b75e-d18225377711
 ```
@@ -321,6 +374,8 @@ spec:
   type: ClusterIP
   ports:
   - port: 80
+    targetPort: 6000
+    protocol: TCP
   selector:
     app: app-deploy
 EOT
@@ -388,7 +443,7 @@ kubectl describe secret $TLS_SECRET -n $NAMESPACE_APP
 ## 10. Install Nginx Ingress Controller with custom name into a dedicated namespace
 
 ```shell
-NAMESPACE_INGRESS="ingress-nginx-app-07"
+NAMESPACE_INGRESS="ingress-nginx-internal"
 
 kubectl create namespace $NAMESPACE_INGRESS
 # namespace/ingress-nginx-app-07 created
@@ -397,7 +452,7 @@ kubectl create namespace $NAMESPACE_INGRESS
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 
-INGRESS_CLASS_NAME="nginx-app-07"
+INGRESS_CLASS_NAME="nginx-internal"
 
 cat <<EOT >> ingress-controller-values.yaml
 controller:
@@ -407,13 +462,15 @@ controller:
     default: false
     controllerValue: "k8s.io/ingress-$INGRESS_CLASS_NAME"
   service:
+    external:
+      enabled: false
     internal:
       enabled: true
       annotations:
-        service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+        service.beta.kubernetes.io/azure-load-balancer-internal-subnet: "snet-aks"
 EOT
 
-helm upgrade --install ingress-nginx-app-07 ingress-nginx/ingress-nginx \
+helm upgrade --install ingress-nginx-app-08-internal ingress-nginx/ingress-nginx \
 --create-namespace \
 --namespace $NAMESPACE_INGRESS \
 --set controller.replicaCount=2 \
@@ -424,14 +481,15 @@ helm upgrade --install ingress-nginx-app-07 ingress-nginx/ingress-nginx \
 
 or
 
-helm upgrade --install ingress-nginx-app-07 ./ingress-nginx-4.12.1.tgz \
+helm upgrade --install ingress-nginx-internal ./ingress-nginx-4.12.1.tgz \
 --create-namespace \
 --namespace $NAMESPACE_INGRESS \
---set controller.replicaCount=2 \
+--set controller.replicaCount=1 \
 --set controller.nodeSelector."kubernetes\.io/os"=linux \
 --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
 --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz \
 -f ingress-controller-values.yaml
+
 ```
 
 helm upgrade --install ingress-nginx-app-07 ingress-nginx/ingress-nginx `
@@ -441,6 +499,7 @@ helm upgrade --install ingress-nginx-app-07 ingress-nginx/ingress-nginx `
      --set controller.nodeSelector."kubernetes\.io/os"=linux `
      --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux `
      --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz `
+     —-set controller.service.annotations.”service\.beta\.kubernetes\.io/azure-load-balancer-internal"="true" `
      -f ingress-controller-values.yaml
 ```
 
@@ -464,7 +523,7 @@ kubectl get pods,svc -n $NAMESPACE_INGRESS
 Capture ingress, public IP (Azure Public IP created)
 
 ```shell
-INGRESS_PUPLIC_IP=$(kubectl get services ingress-$INGRESS_CLASS_NAME-controller -n $NAMESPACE_INGRESS -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+INGRESS_PUPLIC_IP=$(kubectl get services ingress-$INGRESS_CLASS_NAME-controller-internal -n $NAMESPACE_INGRESS -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 echo $INGRESS_PUPLIC_IP
 # 20.101.208.164
 ```
@@ -505,13 +564,13 @@ Add an A record to your DNS zone
 INGRESS_PRIVATE_IP=$(kubectl get services ingress-$INGRESS_CLASS_NAME-controller-internal -n $NAMESPACE_INGRESS -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 echo $INGRESS_PRIVATE_IP
 az network private-dns record-set a add-record \
---resource-group rg-aks-apim-2302 \
---zone-name "pri01.dnszone.com" \
---record-set-name "flask-app" \
+--resource-group rg-aks-apim-0420 \
+--zone-name "internal.webapi" \
+--record-set-name $DNS_NAME \
 --ipv4-address $INGRESS_PRIVATE_IP
 
 # az network public-ip update -g MC_rg-aks-we_aks-cluster_westeurope -n kubernetes-af54fcf50c6b24d7fbb9ed6aa62bdc77 --dns-name $DNS_NAME
-DOMAIN_NAME_FQDN=$DNS_NAME.pri01.dnszone.com
+DOMAIN_NAME_FQDN=$DNS_NAME.internal.webapi
 echo $DOMAIN_NAME_FQDN
 # aks-app-03.houssem.cloud
 ```
@@ -569,13 +628,14 @@ Open the app in the browser and check the link.
 
 kubectl run -it --rm aks-ingress-test --image=mcr.microsoft.com/dotnet/runtime-deps:6.0 --namespace $NAMESPACE_APP
 apt-get update && apt-get install -y curl
+apt-get install iputils-ping
 
 # curl -v -k --resolve $DOMAIN_NAME_FQDN:443:$INGRESS_PRIVATE_IP https://$DOMAIN_NAME_FQDN
-curl -v -k --resolve flask-app.pri01.dnszone.com:443:10.10.0.34 https://flask-app.pri01.dnszone.com
+curl -v -k --resolve webapi-dns.internal.webapi:443:10.10.0.7 https://webapi-dns.internal.webapi
 
-curl -v -k --insecure https://flask-app.pri01.dnszone.com
+curl -v -k --insecure https://webapi-dns.internal.webapi
 
-kubectl exec -n $NAMESPACE_APP pod/app-deploy-5988466b69-vbrn5  -it -- /bin/sh
+kubectl exec -n $NAMESPACE_APP pod/app-deploy-5988466b69-jnfcq  -it -- /bin/sh
 
 # MAIN_NAME_FQDN
 # * Added aks-app-07.westeurope.cloudapp.azure.com:443:20.238.249.157 to DNS cache
@@ -594,3 +654,19 @@ kubectl exec -n $NAMESPACE_APP pod/app-deploy-5988466b69-vbrn5  -it -- /bin/sh
 # *  SSL certificate verify result: self-signed certificate (18), continuing anyway.
 # ...
 ```
+
+
+------------
+https://learn.microsoft.com/en-us/azure/application-gateway/self-signed-certificates
+
+------------
+Enable tracing for an API
+https://learn.microsoft.com/en-us/azure/api-management/api-management-howto-api-inspector#enable-tracing-for-an-api
+
+az apim api list --resource-group 'rg-aks-apim-2302' --service-name 'apim-external-aks-2302' -o table
+
+az rest --method post --url https://management.azure.com/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourceGroups/rg-aks-apim-2302/providers/Microsoft.ApiManagement/service/apim-external-aks-2302/gateways/managed/listDebugCredentials?api-version=2023-05-01-preview
+
+
+
+a0ab50fffd6e41abae886f53de46f2e4

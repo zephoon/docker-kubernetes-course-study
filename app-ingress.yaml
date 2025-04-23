@@ -5,13 +5,13 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
-  ingressClassName: nginx-app-07 # nginx
+  ingressClassName: nginx-internal # nginx
   tls:
   - hosts:
-    - flask-app.pri01.dnszone.com
+    - webapi-dns.internal.webapi
     secretName: tls-secret-csi-app-07
   rules:
-  - host: flask-app.pri01.dnszone.com
+  - host: webapi-dns.internal.webapi
     http:
       paths:
       - path: /

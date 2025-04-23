@@ -1,11 +1,10 @@
 controller:
   ingressClassResource:
-    name: nginx-app-07 # default: nginx
+    name: nginx-internal # default: nginx
     enabled: true
     default: false
-    controllerValue: "k8s.io/ingress-nginx-app-07"
+    controllerValue: "k8s.io/ingress-nginx-internal"
   service:
-    internal:
-      enabled: true
-      annotations:
-        service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    loadBalancerIP: 10.10.0.112
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
