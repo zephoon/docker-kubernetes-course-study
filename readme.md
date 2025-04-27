@@ -770,3 +770,4 @@ az acr import --name $REGISTRY_NAME --source $CERT_MANAGER_REGISTRY/$CERT_MANAGE
 
 
 git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch ./cert/**' --prune-empty --tag-name-filter cat -- --all
+git push origin --force --all
