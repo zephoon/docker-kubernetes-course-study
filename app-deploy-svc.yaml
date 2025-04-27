@@ -1,40 +1,3 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: custom-ca-cert
-data:
-  # in my case it is CloudFlare CA used to sign certificates for origin servers
-  ca.cert.pem: |
-    -----BEGIN CERTIFICATE-----
-    MIIFBTCCAu2gAwIBAgIUFf0SGqznKagZKs75612YQp9bR+YwDQYJKoZIhvcNAQEL
-    BQAwEjEQMA4GA1UEAwwHemVwaG9vbjAeFw0yNTA0MjcwMDAxMThaFw0yNjA0MTgw
-    MDAxMThaMBIxEDAOBgNVBAMMB3plcGhvb24wggIiMA0GCSqGSIb3DQEBAQUAA4IC
-    DwAwggIKAoICAQCkijg70ODRP9cOD+lX0/6jz6SYKLGtnnJzMo7OMZLeun3YPJcX
-    5e9PnX5mTE4hmTIVmBDru5J4e4mXXth6yCdggeIJarixYNII/WHvX80H09KMfki9
-    JG3P4Bfszw0cgGdCKmjut/fhyLkh4ztqWm9seFywzLKfQ27yBe7WK3NMXWZwOSH0
-    uGyK10YrPU+mAjgSXo+ftivExDIMsAo3++i45Khv9LD5DzKVZsy9IyhvXdtbUF3m
-    sH5pwomNKCBKSUjBsf0QIZ0FqYGKe6fi17JzpBFeYBkN7Jy3r9Ki/fRdIt/Cw8nP
-    7PeNvPODE4AckCBkVIqy60edqIpzwY2ITutoytFd4VvLgcOfGZHFCzNdejXrjZZx
-    Ag7YP4YDLTc3aORj1DyOME+zx0bsbtqVKjDZACfCzt0wYRZDywRV4UOTfGkrPT4S
-    DWtNXzoCk5lBFTL2xm/ozufnDdzWcJiWVaHvVehjtah2oYpxlMkjkp4e2hyrcwnV
-    FnvObOPxFOCpllaCQyCGjy5HKCdXc9fWEi5S0O0zdCOJRlqxIWfGZiRl9wSbsdD4
-    ZciZ/QGVoMosBM98WCnJIPv1rcs9ijF0fTxWH88KXcw2wJYu2e/IVAkyOIRJXdrA
-    34T3GMwQBFHsViMOI6F1HaI/ixN/O2k3bMgE0BCT708SRKIcXT4kvtaBswIDAQAB
-    o1MwUTAdBgNVHQ4EFgQUYBSbj/E1LqeyfxLGgatvRR8Nc/IwHwYDVR0jBBgwFoAU
-    YBSbj/E1LqeyfxLGgatvRR8Nc/IwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0B
-    AQsFAAOCAgEAdVYXfQPx2gRQDzo1WTPJ2pPum8nV8amwacVy0jiZYidMZXpzmS9p
-    bfIWtzaqLAmuPwvV1LYwoi79TyV/6odcnZn4RsJluvH7yIT6/IRBjFtRy/icjAD4
-    n9VvZ3QcayfLot+5Ofs1cJQvSsU+9PlWrLKo5Qjiggc0rDW79O89xHjLutkpafkP
-    FpbfY0nurAcFt66O15smF76Zi0oBln5PQ0D6PX7IQ9y+yVVIlWZmsQkKQ6zgTJkt
-    oFandgT02xneRTV/vFbaG20vq/Cs7K3qCJuBJmTyifwMZJHeW0NcXAozRUNa6m8/
-    0B/aU4ARx+amUtXggLjVEwIhwTZd96IOEaXyhUFulrS5QsJZk5WwJUlWjK9JCJUA
-    YR260KUZamkyBLEu/N9qq1x8phHBu5+mU1G2U/WI8afg5yGPoDMpPk/+omr8dlAF
-    +05N2h7I090Md8FYSGX64MQGFoMZXybf4JzuFYiVBCDiFsgXu8Ocum6gbqJGtA75
-    ZwFo9GE2LKCcYEgNlRVkdOLKpHct40C8HG1zFK5x6Z486YG+Gv9xBywPlKdHJd/H
-    RoRt0hmCEFyX987uPff6gXx4qdIZLCgTyYnhlLzaNotvDUeXcs1HKPcsLsSyuVJd
-    MFF7NIX/05TVaeFssll9+F7sk1kLF5E/2afve5mKo2PjDXzgtZzhHTI=
-    -----END CERTIFICATE-----
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -58,10 +21,6 @@ spec:
         volumeMounts:
         - name: secrets-store-inline
           mountPath: "/mnt/secrets-store"
-          readOnly: true
-        - name: custom-ca-cert
-          mountPath: /usr/local/share/ca-certificates/ca.cert.pem
-          subPath: ca.cert.pem
           readOnly: true
       volumes:
         - name: secrets-store-inline

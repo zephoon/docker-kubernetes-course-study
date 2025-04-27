@@ -170,6 +170,8 @@ openssl pkcs12 -export -in ./client.crt -inkey ./client.key -out client.pfx
 # pem
 openssl x509 -in ca.cert.pem -out ca.cert.pem -outform PEM
 
+openssl x509 -in ca.crt -out ca.crt.pem -outform PEM
+
 openssl verify -CAfile ca.cert.pem aks-ingress-cert.pfx
 openssl verify -CAfile ca.cert.pem client.pfx
 ``` 
@@ -671,8 +673,12 @@ apt-get install -y openssl
 # curl -v -k --resolve $DOMAIN_NAME_FQDN:443:$INGRESS_PRIVATE_IP https://$DOMAIN_NAME_FQDN
 curl -v -k --resolve webapi-dns.internal.webapi:443:10.10.0.112 https://webapi-dns.internal.webapi/api/v1/hello
 
+kubectl create secret generic ca-secret --from-file=ca.crt=./cert/ca.cert.pem -n $NAMESPACE_APP
+
+
 curl -v -k --insecure https://webapi-dns.internal.webapi
 curl -v -k https://webapi-dns.internal.webapi/api/v1/hello
+curl -v https://webapi-dns.internal.webapi/api/v1/hello
 curl https://webapi-dns.internal.webapi/api/v1/hello --cert client.crt --key client.key --cacert ca.cert.pem -k -v
 openssl x509 -in ca.crt -out ca.pem -outform PEM
 openssl s_client -CAfile ca.cert.pem -servername webapi-dns.internal.webapi -connect 10.10.0.112:443
@@ -759,3 +765,5 @@ az acr import --name $REGISTRY_NAME --source $CERT_MANAGER_REGISTRY/$CERT_MANAGE
 
 # secure-your-aks-ingress-with-letsencrypt-and-cert-manager
 # https://mrdevops.medium.com/secure-your-aks-ingress-with-letsencrypt-and-cert-manager-97a698418cf3
+
+# https://medium.com/@badawekoo/apply-mutual-tls-over-kubernetes-nginx-ingress-controller-4ea203bce3e0
