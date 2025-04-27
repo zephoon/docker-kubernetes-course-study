@@ -768,8 +768,5 @@ az acr import --name $REGISTRY_NAME --source $CERT_MANAGER_REGISTRY/$CERT_MANAGE
 
 # https://medium.com/@badawekoo/apply-mutual-tls-over-kubernetes-nginx-ingress-controller-4ea203bce3e0
 
-#
-```
-git filter-branch --tree-filter 'rm -f <path_to_file>' HEAD
-git push origin --force --all
-```
+
+git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch ./cert/**' --prune-empty --tag-name-filter cat -- --all
