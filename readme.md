@@ -767,3 +767,9 @@ az acr import --name $REGISTRY_NAME --source $CERT_MANAGER_REGISTRY/$CERT_MANAGE
 # https://mrdevops.medium.com/secure-your-aks-ingress-with-letsencrypt-and-cert-manager-97a698418cf3
 
 # https://medium.com/@badawekoo/apply-mutual-tls-over-kubernetes-nginx-ingress-controller-4ea203bce3e0
+
+#
+```
+git filter-branch --tree-filter 'rm -f <path_to_file>' HEAD
+git push origin --force --all
+```
