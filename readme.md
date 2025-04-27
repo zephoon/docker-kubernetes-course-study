@@ -140,6 +140,40 @@ aks-ingress-tls.key
 aks-ingress-cert.pfx
 ```
 
+
+# Generate the CA Key and Certificate
+# https://awkwardferny.medium.com/configuring-certificate-based-mutual-authentication-with-kubernetes-ingress-nginx-20e7e38fdfca
+```
+<!-- $ openssl req -x509 -sha256 -newkey rsa:4096 -keyout ca.key.pem -out ca.cert.pem -days 356 -nodes -config rootCA.cnf -->
+$ openssl req -x509 -sha256 -newkey rsa:4096 -keyout ca.key.pem -out ca.cert.pem -days 356 -nodes
+# varify the root certificate
+# CN=Zephoon
+openssl x509 -noout -text -in ca.cert.pem
+
+# Generate the Server Key, and Certificate and Sign with the CA Certificate
+$ openssl req -new -newkey rsa:2048 -keyout aks-ingress-tls.key -out aks-ingress-tls.csr -nodes -subj "/CN=$DNS_NAME.internal.webapi/O=aks-ingress-tls" -addext "subjectAltName = DNS:$DNS_NAME.internal.webapi"
+$ openssl x509 -req -sha256 -days 365 -in aks-ingress-tls.csr -CA ca.cert.pem -CAkey ca.key.pem -set_serial 01 -out aks-ingress-tls.crt
+
+openssl x509 -noout -text -in aks-ingress-tls.crt
+
+# Generate the Client Key, and Certificate and Sign with the CA Certificate
+$ openssl req -new -newkey rsa:2048 -keyout client.key -out client.csr -nodes -subj "/CN=Zephoon"
+$ openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.cert.pem -CAkey ca.key.pem -set_serial 02 -out client.crt
+
+openssl x509 -noout -text -in client.crt
+
+# pfx
+openssl pkcs12 -export -in ./ca.cert.pem -inkey ./ca.key.pem -out ca.pfx 
+openssl pkcs12 -export -in ./aks-ingress-tls.crt -inkey ./aks-ingress-tls.key -out aks-ingress-cert.pfx
+openssl pkcs12 -export -in ./client.crt -inkey ./client.key -out client.pfx
+
+# pem
+openssl x509 -in ca.cert.pem -out ca.cert.pem -outform PEM
+
+openssl verify -CAfile ca.cert.pem aks-ingress-cert.pfx
+openssl verify -CAfile ca.cert.pem client.pfx
+``` 
+
 # disable certificate chain validation if using self-signed certificates
 # https://learn.microsoft.com/en-us/azure/api-management/api-management-howto-mutual-certificates
 ```
@@ -408,6 +442,8 @@ echo $POD_NAME
 kubectl exec $POD_NAME -n $NAMESPACE_APP -it -- ls /mnt/secrets-store
 aks-ingress-cert
 
+kubectl exec $POD_NAME -n $NAMESPACE_APP -it -- cat /usr/local/share/ca-certificates/ca.cert.pem
+
 kubectl exec $POD_NAME -n $NAMESPACE_APP -it -- cat /mnt/secrets-store/aks-ingress-cert
 # -----BEGIN PRIVATE KEY-----
 # MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDRCLOabqmJwg+H
@@ -627,13 +663,24 @@ Open the app in the browser and check the link.
 ```shell
 
 kubectl run -it --rm aks-ingress-test --image=mcr.microsoft.com/dotnet/runtime-deps:6.0 --namespace $NAMESPACE_APP
-apt-get update && apt-get install -y curl
-apt-get install iputils-ping
+apt-get update && apt-get install -y curl && \
+apt-get install -y iputils-ping && \
+apt-get install -y vim && \
+apt-get install -y openssl
 
 # curl -v -k --resolve $DOMAIN_NAME_FQDN:443:$INGRESS_PRIVATE_IP https://$DOMAIN_NAME_FQDN
-curl -v -k --resolve webapi-dns.internal.webapi:443:10.10.0.7 https://webapi-dns.internal.webapi
+curl -v -k --resolve webapi-dns.internal.webapi:443:10.10.0.112 https://webapi-dns.internal.webapi/api/v1/hello
 
 curl -v -k --insecure https://webapi-dns.internal.webapi
+curl -v -k https://webapi-dns.internal.webapi/api/v1/hello
+curl https://webapi-dns.internal.webapi/api/v1/hello --cert client.crt --key client.key --cacert ca.cert.pem -k -v
+openssl x509 -in ca.crt -out ca.pem -outform PEM
+openssl s_client -CAfile ca.cert.pem -servername webapi-dns.internal.webapi -connect 10.10.0.112:443
+openssl s_client -CAfile ca.cert.pem  -servername webapi-dns.internal.webapi -connect 10.10.0.112:443
+openssl s_client -showcerts -connect 10.10.0.112:443
+openssl s_client -showcerts -connect webapi-dns.internal.webapi:443 -servername webapi-dns.internal.webapi
+
+openssl x509 -noout -text -in client.crt
 
 kubectl exec -n $NAMESPACE_APP pod/app-deploy-5988466b69-jnfcq  -it -- /bin/sh
 
@@ -670,3 +717,45 @@ az rest --method post --url https://management.azure.com/subscriptions/edccbd3e-
 
 
 a0ab50fffd6e41abae886f53de46f2e4
+
+# Manually auto-rotation on an existing AKS cluster
+# https://learn.microsoft.com/en-us/azure/aks/certificate-rotation
+az aks rotate-certs --resource-group $RESOURCE_GROUP_NAME --name $CLUSTER_NAME
+<!-- az aks addon update --resource-group rg-aks-apim-0420 --name aks-cluster-01 --enable-secret-rotation --rotation-poll-interval 5m -->
+
+
+# Custom certificate authority (CA) in Azure Kubernetes Service (AKS)
+# https://learn.microsoft.com/en-us/azure/aks/custom-certificate-authority#install-cas-on-your-nodes-trust-store
+```
+az rest --method get --url "/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourceGroups/rg-aks-apim-0420/providers/Microsoft.ContainerService/managedClusters/aks-cluster-01?api-version=2025-01-01" > body.json
+
+cat ca.cert.pem | base64
+
+ "securityProfile": {
+    "customCaTrustCertificates": [
+        "value"
+
+az rest --method put --url "/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourceGroups/rg-aks-apim-0420/providers/Microsoft.ContainerService/managedClusters/aks-cluster-01?api-version=2025-01-01" --body @body.json
+
+az aks show -g rg-aks-apim-0420 -n aks-cluster-01 | grep securityProfile -A 4
+
+kubectl get nodes -o wide
+kubectl debug node/aks-mainpool-15193716-vmss00000b -it --image=mcr.microsoft.com/cbl-mariner/busybox:2.0
+```
+
+REGISTRY_NAME=<REGISTRY_NAME>
+CERT_MANAGER_REGISTRY=quay.io
+CERT_MANAGER_TAG=v1.8.0
+CERT_MANAGER_IMAGE_CONTROLLER=jetstack/cert-manager-controller
+CERT_MANAGER_IMAGE_WEBHOOK=jetstack/cert-manager-webhook
+CERT_MANAGER_IMAGE_CAINJECTOR=jetstack/cert-manager-cainjector
+
+
+# import cert manager
+az acr import --name $REGISTRY_NAME --source $CERT_MANAGER_REGISTRY/$CERT_MANAGER_IMAGE_CONTROLLER:$CERT_MANAGER_TAG --image $CERT_MANAGER_IMAGE_CONTROLLER:$CERT_MANAGER_TAG
+az acr import --name $REGISTRY_NAME --source $CERT_MANAGER_REGISTRY/$CERT_MANAGER_IMAGE_WEBHOOK:$CERT_MANAGER_TAG --image $CERT_MANAGER_IMAGE_WEBHOOK:$CERT_MANAGER_TAG
+az acr import --name $REGISTRY_NAME --source $CERT_MANAGER_REGISTRY/$CERT_MANAGER_IMAGE_CAINJECTOR:$CERT_MANAGER_TAG --image $CERT_MANAGER_IMAGE_CAINJECTOR:$CERT_MANAGER_TAG
+
+
+# secure-your-aks-ingress-with-letsencrypt-and-cert-manager
+# https://mrdevops.medium.com/secure-your-aks-ingress-with-letsencrypt-and-cert-manager-97a698418cf3

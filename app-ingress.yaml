@@ -3,7 +3,8 @@ kind: Ingress
 metadata:
   name: app-ingress
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
 spec:
   ingressClassName: nginx-internal # nginx
   tls:

@@ -1,0 +1,178 @@
+{
+  "id": "/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourcegroups/rg-aks-apim-0420/providers/Microsoft.ContainerService/managedClusters/aks-cluster-01",
+  "identity": {
+    "principalId": "c42679ab-cb3e-41ce-9ef9-301c352c9279",
+    "tenantId": "9d427af2-14f5-4a21-ad29-9bf8683da155",
+    "type": "SystemAssigned"
+  },
+  "location": "eastasia",
+  "name": "aks-cluster-01",
+  "properties": {
+    "aadProfile": {
+      "adminGroupObjectIDs": [
+        "ec0b1339-db05-4fd9-ae72-f64c223aa401",
+        "91fc859d-2740-4ca5-b84e-0ac36172dedf"
+      ],
+      "adminUsers": null,
+      "enableAzureRBAC": true,
+      "managed": true,
+      "tenantID": "9d427af2-14f5-4a21-ad29-9bf8683da155"
+    },
+    "addonProfiles": {
+      "azureKeyvaultSecretsProvider": {
+        "config": {
+          "enableSecretRotation": "true",
+          "rotationPollInterval": "2m"
+        },
+        "enabled": true,
+        "identity": {
+          "clientId": "5d894ce5-7478-4a79-8f56-fa2831a1577a",
+          "objectId": "d84a1f25-f6f2-4023-bccc-6ec32b847468",
+          "resourceId": "/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourcegroups/MC_rg-aks-apim-0420_aks-cluster-01_eastasia/providers/Microsoft.ManagedIdentity/userAssignedIdentities/azurekeyvaultsecretsprovider-aks-cluster-01"
+        }
+      }
+    },
+    "agentPoolProfiles": [
+      {
+        "count": 1,
+        "currentOrchestratorVersion": "1.30.0",
+        "enableAutoScaling": false,
+        "enableEncryptionAtHost": false,
+        "enableFIPS": false,
+        "enableNodePublicIP": false,
+        "enableUltraSSD": false,
+        "kubeletDiskType": "OS",
+        "maxPods": 30,
+        "mode": "System",
+        "name": "mainpool",
+        "nodeImageVersion": "AKSAzureLinux-V2-202504.06.0",
+        "orchestratorVersion": "1.30.0",
+        "osDiskSizeGB": 128,
+        "osDiskType": "Managed",
+        "osSKU": "AzureLinux",
+        "osType": "Linux",
+        "powerState": {
+          "code": "Running"
+        },
+        "provisioningState": "Succeeded",
+        "scaleDownMode": "Delete",
+        "securityProfile": {
+          "enableSecureBoot": false,
+          "enableVTPM": false
+        },
+        "type": "VirtualMachineScaleSets",
+        "upgradeSettings": {
+          "maxSurge": "10%"
+        },
+        "vmSize": "Standard_A4_v2",
+        "vnetSubnetID": "/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourceGroups/rg-aks-apim-0420/providers/Microsoft.Network/virtualNetworks/vnet-spoke/subnets/snet-aks"
+      }
+    ],
+    "autoUpgradeProfile": {
+      "nodeOSUpgradeChannel": "NodeImage",
+      "upgradeChannel": "none"
+    },
+    "azureMonitorProfile": {
+      "metrics": {
+        "enabled": false,
+        "kubeStateMetrics": {}
+      }
+    },
+    "azurePortalFQDN": "aks-qjbxnczp.portal.hcp.eastasia.azmk8s.io",
+    "bootstrapProfile": {
+      "artifactSource": "Direct"
+    },
+    "currentKubernetesVersion": "1.30.0",
+    "disableLocalAccounts": false,
+    "dnsPrefix": "aks",
+    "enableRBAC": true,
+    "fqdn": "aks-qjbxnczp.hcp.eastasia.azmk8s.io",
+    "identityProfile": {
+      "kubeletidentity": {
+        "clientId": "7d6b8063-bbd6-411f-a330-5d7a47caa08c",
+        "objectId": "3f24d3b1-988b-4b77-ad40-2eea5bcd5348",
+        "resourceId": "/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourcegroups/MC_rg-aks-apim-0420_aks-cluster-01_eastasia/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aks-cluster-01-agentpool"
+      }
+    },
+    "kubernetesVersion": "1.30.0",
+    "maxAgentPools": 100,
+    "metricsProfile": {
+      "costAnalysis": {
+        "enabled": false
+      }
+    },
+    "networkProfile": {
+      "dnsServiceIP": "10.0.0.10",
+      "ipFamilies": [
+        "IPv4"
+      ],
+      "loadBalancerProfile": {
+        "backendPoolType": "nodeIPConfiguration",
+        "effectiveOutboundIPs": [
+          {
+            "id": "/subscriptions/edccbd3e-fb14-444d-92ae-e43da2008c69/resourceGroups/MC_rg-aks-apim-0420_aks-cluster-01_eastasia/providers/Microsoft.Network/publicIPAddresses/8b353f97-d9f1-4161-a40b-da18d7a4017a"
+          }
+        ],
+        "managedOutboundIPs": {
+          "count": 1
+        }
+      },
+      "loadBalancerSku": "standard",
+      "networkDataplane": "azure",
+      "networkPlugin": "azure",
+      "networkPolicy": "none",
+      "outboundType": "loadBalancer",
+      "serviceCidr": "10.0.0.0/16",
+      "serviceCidrs": [
+        "10.0.0.0/16"
+      ]
+    },
+    "nodeResourceGroup": "MC_rg-aks-apim-0420_aks-cluster-01_eastasia",
+    "oidcIssuerProfile": {
+      "enabled": true,
+      "issuerURL": "https://eastasia.oic.prod-aks.azure.com/9d427af2-14f5-4a21-ad29-9bf8683da155/c838d3bb-d8a8-4f1e-951d-af3304318f9c/"
+    },
+    "powerState": {
+      "code": "Running"
+    },
+    "provisioningState": "Succeeded",
+    "resourceUID": "68050fdea2cd16000151fd08",
+    "securityProfile": {
+      "imageCleaner": {
+        "enabled": false,
+        "intervalHours": 48
+      },
+      "workloadIdentity": {
+        "enabled": true
+      },
+      "customCaTrustCertificates": [
+        "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZCVENDQXUyZ0F3SUJBZ0lVRmYwU0dxem5LYWdaS3M3NTYxMllRcDliUitZd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0VqRVFNQTRHQTFVRUF3d0hlbVZ3YUc5dmJqQWVGdzB5TlRBME1qY3dNREF4TVRoYUZ3MHlOakEwTVRndwpNREF4TVRoYU1CSXhFREFPQmdOVkJBTU1CM3BsY0dodmIyNHdnZ0lpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElDCkR3QXdnZ0lLQW9JQ0FRQ2tpamc3ME9EUlA5Y09EK2xYMC82ano2U1lLTEd0bm5Kek1vN09NWkxldW4zWVBKY1gKNWU5UG5YNW1URTRobVRJVm1CRHJ1NUo0ZTRtWFh0aDZ5Q2RnZ2VJSmFyaXhZTklJL1dIdlg4MEgwOUtNZmtpOQpKRzNQNEJmc3p3MGNnR2RDS21qdXQvZmh5TGtoNHp0cVdtOXNlRnl3ekxLZlEyN3lCZTdXSzNOTVhXWndPU0gwCnVHeUsxMFlyUFUrbUFqZ1NYbytmdGl2RXhESU1zQW8zKytpNDVLaHY5TEQ1RHpLVlpzeTlJeWh2WGR0YlVGM20Kc0g1cHdvbU5LQ0JLU1VqQnNmMFFJWjBGcVlHS2U2ZmkxN0p6cEJGZVlCa043SnkzcjlLaS9mUmRJdC9DdzhuUAo3UGVOdlBPREU0QWNrQ0JrVklxeTYwZWRxSXB6d1kySVR1dG95dEZkNFZ2TGdjT2ZHWkhGQ3pOZGVqWHJqWlp4CkFnN1lQNFlETFRjM2FPUmoxRHlPTUUrengwYnNidHFWS2pEWkFDZkN6dDB3WVJaRHl3UlY0VU9UZkdrclBUNFMKRFd0Tlh6b0NrNWxCRlRMMnhtL296dWZuRGR6V2NKaVdWYUh2VmVoanRhaDJvWXB4bE1ramtwNGUyaHlyY3duVgpGbnZPYk9QeEZPQ3BsbGFDUXlDR2p5NUhLQ2RYYzlmV0VpNVMwTzB6ZENPSlJscXhJV2ZHWmlSbDl3U2JzZEQ0ClpjaVovUUdWb01vc0JNOThXQ25KSVB2MXJjczlpakYwZlR4V0g4OEtYY3cyd0pZdTJlL0lWQWt5T0lSSlhkckEKMzRUM0dNd1FCRkhzVmlNT0k2RjFIYUkvaXhOL08yazNiTWdFMEJDVDcwOFNSS0ljWFQ0a3Z0YUJzd0lEQVFBQgpvMU13VVRBZEJnTlZIUTRFRmdRVVlCU2JqL0UxTHFleWZ4TEdnYXR2UlI4TmMvSXdId1lEVlIwakJCZ3dGb0FVCllCU2JqL0UxTHFleWZ4TEdnYXR2UlI4TmMvSXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QU5CZ2txaGtpRzl3MEIKQVFzRkFBT0NBZ0VBZFZZWGZRUHgyZ1JRRHpvMVdUUEoycFB1bThuVjhhbXdhY1Z5MGppWllpZE1aWHB6bVM5cApiZklXdHphcUxBbXVQd3ZWMUxZd29pNzlUeVYvNm9kY25abjRSc0psdXZIN3lJVDYvSVJCakZ0UnkvaWNqQUQ0Cm45VnZaM1FjYXlmTG90KzVPZnMxY0pRdlNzVSs5UGxXckxLbzVRamlnZ2MwckRXNzlPODl4SGpMdXRrcGFma1AKRnBiZlkwbnVyQWNGdDY2TzE1c21GNzZaaTBvQmxuNVBRMEQ2UFg3SVE5eSt5VlZJbFdabXNRa0tRNnpnVEprdApvRmFuZGdUMDJ4bmVSVFYvdkZiYUcyMHZxL0NzN0szcUNKdUJKbVR5aWZ3TVpKSGVXME5jWEFvelJVTmE2bTgvCjBCL2FVNEFSeCthbVV0WGdnTGpWRXdJaHdUWmQ5NklPRWFYeWhVRnVsclM1UXNKWms1V3dKVWxXaks5SkNKVUEKWVIyNjBLVVphbWt5QkxFdS9OOXFxMXg4cGhIQnU1K21VMUcyVS9XSThhZmc1eUdQb0RNcFBrLytvbXI4ZGxBRgorMDVOMmg3STA5ME1kOEZZU0dYNjRNUUdGb01aWHliZjRKenVGWWlWQkNEaUZzZ1h1OE9jdW02Z2JxSkd0QTc1Clp3Rm85R0UyTEtDY1lFZ05sUlZrZE9MS3BIY3Q0MEM4SEcxekZLNXg2WjQ4NllHK0d2OXhCeXdQbEtkSEpkL0gKUm9SdDBobUNFRnlYOTg3dVBmZjZnWHg0cWRJWkxDZ1R5WW5obEx6YU5vdHZEVWVYY3MxSEtQY3NMc1N5dVZKZApNRkY3TklYLzA1VFZhZUZzc2xsOStGN3NrMWtMRjVFLzJhZnZlNW1LbzJQakRYemd0WnpoSFRJPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+      ]
+    },
+    "servicePrincipalProfile": {
+      "clientId": "msi"
+    },
+    "storageProfile": {
+      "diskCSIDriver": {
+        "enabled": true
+      },
+      "fileCSIDriver": {
+        "enabled": true
+      },
+      "snapshotController": {
+        "enabled": true
+      }
+    },
+    "supportPlan": "KubernetesOfficial",
+    "windowsProfile": {
+      "adminUsername": "azureuser",
+      "enableCSIProxy": true
+    },
+    "workloadAutoScalerProfile": {}
+  },
+  "sku": {
+    "name": "Base",
+    "tier": "Free"
+  },
+  "type": "Microsoft.ContainerService/ManagedClusters"
+}
